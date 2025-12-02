@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/perlpunk/opensuse-devel-languages-perl-meta/graph/badge.svg?token=YJDMPYSA5G)](https://codecov.io/gh/perlpunk/opensuse-devel-languages-perl-meta)
+
 ## Fetch metadata from devel:languages:perl packages
 
 * https://build.opensuse.org/project/show/devel:languages:perl

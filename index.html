@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Data Table Fetcher</title>
-    <!-- Simple, self-contained CSS styles -->
+    <title>devel:languages:perl metadata</title>
     <style>
         :root {
             font-family: 'Inter', sans-serif;
@@ -140,7 +139,7 @@
                 icon = `<div class="spinner"></div>`;
                 statusClass += ' status-loading';
             } else if (type === 'success') {
-                icon = '✅ ';
+                icon = '';
                 statusClass += ' status-success';
             } else if (type === 'error') {
                 icon = '❌ ';
@@ -161,14 +160,19 @@
                 return;
             }
 
-            const headers = ["Module", "Version", "Overrides", "Patches"];
+            const headers = [
+                ["Module", "Module name"],
+                ["Version", "Module version"],
+                ["Overrides", "cpanspec.yml has entries that modify the spec"],
+                ["Patches", "There are patches"],
+            ];
 
             let tableHTML = `
                 <table>
                     <thead>
                         <tr>
                             ${headers.map(header =>
-                                `<th scope="col">${header}</th>`
+                                `<th scope="col" title="${header[1]}">${header[0]}</th>`
                             ).join('')}
                         </tr>
                     </thead>
@@ -186,7 +190,7 @@
                 }
 
                 headers.forEach(key => {
-                    let cellContent = entry[key];
+                    let cellContent = entry[key[0]];
                     let cellClasses = "";
                     tableHTML += `<td class="${cellClasses}">${cellContent}</td>`;
                 });
@@ -231,7 +235,7 @@
 
                 const json = await response.json();
                 buildTable(json);
-                showMessage('success', `Successfully loaded records.`);
+                showMessage('success', ``);
             } catch (error) {
                 console.error("Critical Fetch Error:", error);
                 showMessage('error', `Failed to load data. ${error.message}`);

@@ -58,6 +58,9 @@ class Module::OpenSUSE::Meta::Package 0.001 {
         my $cpanspec = "$obsdir/$name/cpanspec.yml";
         return unless -f $cpanspec;
         my $data = LoadFile $cpanspec;
+        not defined $data->{ $_ } and delete $data->{ $_ } for keys %$data;
+        not keys %{ $data->{ $_ } || {} } and delete $data->{ $_ } for qw/ patches /;
+        not @{ $data->{ $_ } || [] } and delete $data->{ $_ } for qw/ sources /;
         return unless keys %$data;
         return $data;
     }

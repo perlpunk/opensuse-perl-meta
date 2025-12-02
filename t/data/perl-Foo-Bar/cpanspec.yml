@@ -2,3 +2,4 @@ patches:
   some-bugfix.patch: -p1
 preamble: |-
   BuildRequires: libyaml
+sources: []

@@ -1,12 +1,12 @@
 #!/usr/bin/perl
 use v5.42;
 use Getopt::Long::Descriptive;
-use Module::OpenSUSE::Meta;
+use Module::OpenSUSE::Meta::DB;
 
 sub main ($opt) {
     my $obsdir = $opt->{obs_dir};
     my $exportdir = $opt->{export_dir};
-    my $meta = Module::OpenSUSE::Meta->new(obsdir => $obsdir, exportdir => $exportdir);
+    my $meta = Module::OpenSUSE::Meta::DB->new(obsdir => $obsdir, exportdir => $exportdir);
     if ($opt->{init}) {
         $meta->init;
     }

@@ -3,7 +3,7 @@ use experimental 'class';
 
 use Module::OpenSUSE::Meta::Package;
 
-class Module::OpenSUSE::Meta 0.001 {
+class Module::OpenSUSE::Meta::DB 0.001 {
     use autodie;
     use YAML::PP qw/ DumpFile /;
     use JSON::PP qw/ encode_json /;

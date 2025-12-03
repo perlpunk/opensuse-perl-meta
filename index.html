@@ -12,20 +12,20 @@
         body {
             background-color: #f9fafb; /* Light background */
             min-height: 100vh;
-            padding: 20px;
+            padding: 10px;
         }
         .container {
             margin: 0 auto;
             background-color: #fff;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
-            padding: 30px;
+            padding: 20px;
         }
         h1 {
             font-size: 24px;
             font-weight: bold;
             color: #333;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             border-bottom: 1px solid #ccc;
             padding-bottom: 10px;
         }
@@ -62,33 +62,42 @@
         }
 
         /* Table Styles */
-        table {
+        table.main {
             width: 100%;
             border-collapse: collapse;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             border-radius: 6px;
             overflow: hidden;
         }
-        thead {
+        table.main thead {
             background-color: #ecf0f1;
         }
-        th, td {
-            padding: 12px 15px;
+        table.main th, table.main td {
+            padding: 8px 10px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
-        th {
+        table.main th {
             font-size: 12px;
             color: #7f8c8d;
             text-transform: uppercase;
         }
         /* Simple zebra striping and hover */
-        tbody tr:nth-child(even) {
+        table.main tbody tr:nth-child(even) {
             background-color: #f4f6f7;
         }
-        tbody tr:hover {
+        table.main tbody tr:hover {
             background-color: #e8f0f3;
             transition: background-color 0.2s;
+        }
+        table.cpanspec {
+            border-collapse: collapse;
+        }
+        table.cpanspec td {
+            padding: 0.5em;
+            text-align: left;
+            vertical-align: top;
+            border: 1px solid #ddd;
         }
 
         /* Boolean Spans (Yes/No) */
@@ -110,6 +119,54 @@
         }
         a {
             color: #550000;
+        }
+
+        .info-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 1000px;
+            text-align: left;
+            transform: scale(0.9);
+            opacity: 0;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+            overflow: auto;
+        }
+        .modal-overlay {
+            /* Full screen overlay to dim the background */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none; /* Initially hidden */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* Ensure it is on top of everything */
+        }
+        .modal-overlay.visible {
+            display: flex;
+        }
+
+        .modal-overlay.visible .info-card {
+            transform: scale(1);
+            opacity: 1;
+        }
+        .close-btn {
+            float: right;
+            font-size: 24px;
+            font-weight: bold;
+            line-height: 1;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: #ef4444;
         }
     </style>
 </head>
@@ -147,12 +204,21 @@
 
     </div>
 
+    <div id="popupOverlay" class="modal-overlay">
+        <div class="info-card">
+            <span class="close-btn" id="closePopup">&times;</span>
+            <h2 id="info-card-title">cpanspec.yml</h2>
+            <pre id="cpanspec-content"></pre>
+        </div>
+    </div>
+
     <script>
         const tableContainer = document.getElementById('table-container');
         const messageContainer = document.getElementById('message-container');
         const lastUpdatedSpan = document.getElementById('last-updated');
         const commitShaSpan = document.getElementById('commit-sha');
         const commitLink = document.getElementById('commit-link');
+        let metadata;
 
         const dataUrl = 'meta.json';
 
@@ -198,7 +264,7 @@
             ];
 
             let tableHTML = `
-                <table>
+                <table class="main">
                     <thead>
                         <tr>
                             ${headers.map(header =>
@@ -226,6 +292,12 @@
                     if (key[0] === 'Module') {
                         cellContent = `<a href="https://src.opensuse.org/perl/${cellContent}">${cellContent}</a>`;
                     }
+                    else if (key[0] === 'Overrides' && cellContent === 'yes') {
+                        cellContent = `<a href="javascript:showCpanspec('${pkg}')">${cellContent}</a>`;
+                    }
+                    else if (key[0] === 'Patches' && cellContent !== '-') {
+                        cellContent = `<a href="javascript:showPatches('${pkg}')">${cellContent}</a>`;
+                    }
                     tableHTML += `<td class="${cellClasses}">${cellContent}</td>`;
                 });
 
@@ -238,6 +310,74 @@
             `;
 
             tableContainer.innerHTML = tableHTML;
+        }
+
+        const popupOverlay = document.getElementById('popupOverlay');
+        const cpanspecContent = document.getElementById('cpanspec-content');
+        const infoTitle = document.getElementById('info-card-title');
+        const closePopupBtn = document.getElementById('closePopup');
+        closePopupBtn.addEventListener('click', hidePopup);
+
+        popupOverlay.addEventListener('click', function(event) {
+            if (event.target === popupOverlay) {
+                hidePopup();
+            }
+        });
+
+        function showCpanspec(pkg) {
+            pkgdata = metadata["packages"][pkg]["cpanspec"];
+
+            let table = '<table class="cpanspec">';
+            Object.entries(pkgdata).sort().forEach(([key, value]) => {
+                if (typeof value === 'object' || typeof value === 'array') {
+                    value = JSON.stringify(value, null, 2);
+                }
+                let line = '<tr><td>'
+                    + sanitizeHTML(key) + ":</td><td>" + sanitizeHTML(value)
+                    + "</td></tr>";
+                table += line;
+            });
+            table += '</table>';
+            let title = "cpanspec YAML";
+            showInfoCard(title, table);
+        }
+
+        function showPatches(pkg) {
+            patches = metadata["packages"][pkg]["cpanspec"]["patches"];
+            let table = '<table class="cpanspec">';
+            Object.entries(patches).sort().forEach(([key, value]) => {
+                if (value === null) {
+                    value = '';
+                }
+                key = sanitizeHTML(key);
+                let line = '<tr><td>'
+                    + '<a href="https://src.opensuse.org/perl/' + pkg + '/src/branch/main/'+key+'">' + key + '</a>'
+                    + ":</td><td>" + sanitizeHTML(value)
+                    + "</td></tr>";
+                table += line;
+            });
+            table += '</table>';
+            showInfoCard("Patches", table);
+        }
+
+        function showInfoCard(title, content) {
+            cpanspecContent.innerHTML = content;
+            infoTitle.innerHTML = title;
+            popupOverlay.classList.add('visible');
+        }
+
+        document.addEventListener('keyup', function(event) {
+            if (event.key === 'Escape') {
+                hidePopup();
+            }
+        });
+        var sanitizeHTML = function (str) {
+            return str.toString().replace(/[^\w. ]/gi, function (c) {
+                return '&#' + c.charCodeAt(0) + ';';
+            });
+        };
+        function hidePopup() {
+            popupOverlay.classList.remove('visible');
         }
 
         async function fetchWithRetry(url, maxRetries = 1) {
@@ -268,6 +408,7 @@
                 }
 
                 const json = await response.json();
+                metadata = json;
                 buildTable(json);
                 showMessage('success', ``);
             } catch (error) {

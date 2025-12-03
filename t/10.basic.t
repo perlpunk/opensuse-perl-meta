@@ -45,6 +45,8 @@ packages:
         preamble: 'BuildRequires: libyaml'
     requires:
     - perl(Module::Load)
+    recommends:
+    - perl(YAML::PP)
     version: 0.39.0
 EOM
 my $expected = Load $yaml;

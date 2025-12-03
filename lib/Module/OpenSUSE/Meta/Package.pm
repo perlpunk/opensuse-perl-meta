@@ -50,6 +50,10 @@ class Module::OpenSUSE::Meta::Package 0.001 {
                 push @{ $meta{requires} }, $1;
                 next;
             }
+            if ($line =~ m/^Recommends: *(\S+)/) {
+                push @{ $meta{recommends} }, $1;
+                next;
+            }
             if ($line =~ m/^Provides: *(\S+)/) {
                 push @{ $meta{provides} }, $1;
                 next;

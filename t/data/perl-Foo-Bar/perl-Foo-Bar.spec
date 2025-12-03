@@ -24,6 +24,7 @@ BuildRequires:  perl(Module::Load)
 BuildRequires:  perl(Test::More) >= 0.98
 BuildRequires:  perl(Test::Warn)
 Requires:       perl(Module::Load)
+Recommends:     perl(YAML::PP)
 %{perl_requires}
 
 %description

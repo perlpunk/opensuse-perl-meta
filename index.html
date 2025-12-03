@@ -138,11 +138,21 @@
 
         <div id="table-container">
         </div>
+        <hr>
+        Data retrieved from
+        <a href="https://src.opensuse.org/perl/_ObsPrj">perl/_ObsPrj</a><br>
+        at commit
+        <a id="commit-link" href="https://src.opensuse.org/perl/_ObsPrj/commit/"><span id="commit-sha">...</span></a>
+        at <span id="last-updated">...</span>
+
     </div>
 
     <script>
         const tableContainer = document.getElementById('table-container');
         const messageContainer = document.getElementById('message-container');
+        const lastUpdatedSpan = document.getElementById('last-updated');
+        const commitShaSpan = document.getElementById('commit-sha');
+        const commitLink = document.getElementById('commit-link');
 
         const dataUrl = 'meta.json';
 
@@ -175,6 +185,9 @@
                 tableContainer.innerHTML = '<p style="color: #6b7280;">No data records found to display.</p>';
                 return;
             }
+            lastUpdatedSpan.innerHTML = data["last_commit"]["date"];
+            commitShaSpan.innerHTML = data["last_commit"]["sha"];
+            commitLink.href += data["last_commit"]["sha"];
 
             const headers = [
                 ["Module", "Module name"],
@@ -196,7 +209,7 @@
                     <tbody>
             `;
 
-            Object.entries(data).sort().forEach(([pkg, value]) => {
+            Object.entries(data["packages"]).sort().forEach(([pkg, value]) => {
 
                 tableHTML += `<tr>`;
                 entry = {
